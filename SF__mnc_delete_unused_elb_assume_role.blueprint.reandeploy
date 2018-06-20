@@ -1,0 +1,614 @@
+{
+  "environments": [
+    {
+      "name": "1mnc_rule_processor_lambda_permission",
+      "connectionName": "dummy-connection",
+      "connectionType": "SSH",
+      "description": "Blueprint for adding lambda permissions to processor lambda",
+      "envVersion": "01.00.02",
+      "exportedByEmail": "vaibhav.menkudale@reancloud.com",
+      "exportedOn": 1528479766212,
+      "providerName": "REAN-MNC",
+      "providerType": "aws",
+      "region": "us-east-1",
+      "resources": [
+        {
+          "name": "Input Variables",
+          "resourceName": "Input Variables",
+          "attributes": {
+            "input_variables": "{\"customerAccountNumber\":\"693265998683\",\"customerName\":\"mnc-client\"}"
+          },
+          "positionX": 105,
+          "positionY": 170
+        },
+        {
+          "name": "mnc_rule_processor_dependency",
+          "resourceName": "Depends_On",
+          "attributes": {
+            "access_key ": null,
+            "acl": null,
+            "assume_role_policy": null,
+            "Depends_On": "1mnc_rule_processor_lambda_setup",
+            "dynamodb_table": null,
+            "encrypt": "false",
+            "endpoint": null,
+            "external_id": null,
+            "kms_key_id": null,
+            "lock_table": null,
+            "profile": null,
+            "reference_type": "Environment Name",
+            "role_arn": null,
+            "secret_key": null,
+            "session_name": null,
+            "shared_credentials_file": null,
+            "token": null,
+            "workspace_key_prefix": null
+          },
+          "positionX": 405,
+          "positionY": 291
+        },
+        {
+          "name": "mnc_rule_processor_lambda_permission",
+          "resourceName": "aws_lambda_permission",
+          "attributes": {
+            "action": "lambda:InvokeFunction",
+            "function_name": "${mnc_rule_processor_dependency.lambdaFunctionName}",
+            "principal": "config.amazonaws.com",
+            "qualifier": null,
+            "source_account": "${var.customerAccountNumber}",
+            "source_arn": null,
+            "statement_id": "${var.customerAccountNumber}_${var.customerName}"
+          },
+          "positionX": 338,
+          "positionY": 124
+        },
+        {
+          "name": "Output",
+          "resourceName": "output",
+          "attributes": {
+            "output": "{\"lambdaRoleId\":{\"value\":\"${mnc_rule_processor_dependency.lambdaRoleId}\"}}"
+          },
+          "positionX": 746,
+          "positionY": 194
+        }
+      ]
+    },
+    {
+      "name": "1mnc_rule_processor_lambda_setup",
+      "connectionName": "dummy-connection",
+      "connectionType": "SSH",
+      "description": "Blueprint for creating mnc rule processor lambda",
+      "envVersion": "01.00.02",
+      "exportedByEmail": "vaibhav.menkudale@reancloud.com",
+      "exportedOn": 1528479766227,
+      "providerName": "REAN-MNC",
+      "providerType": "aws",
+      "region": "us-east-1",
+      "resources": [
+        {
+          "name": "Input Variables",
+          "resourceName": "Input Variables",
+          "attributes": {
+            "input_variables": "{\"subnet_ids\":[\"subnet-caa99297\"],\"security_group_ids\":[\"sg-05310273\"],\"lambdaFunctionName\":\"vsmnc-test-lambda-notifier\",\"notifierLambdaFunctionName\":\"vsmnc-test-email\",\"artifactBucketName\":\"testbuckets3exposed\",\"artifactAbsolutePath\":\"rean_mnc_rule_processor_v1.0.06.zip\",\"owner\":\"vaibhav.menkudale\",\"environment\":\"Testing\",\"product\":\"REAN Managed Cloud\"}"
+          },
+          "positionX": 98,
+          "positionY": 105
+        },
+        {
+          "name": "mnc_payload_bucket",
+          "resourceName": "aws_s3_bucket",
+          "attributes": {
+            "acceleration_status": null,
+            "acl": "private",
+            "bucket": "${data.aws_caller_identity.current.account_id}-rean-managed-cloud-payload",
+            "cors_rule": null,
+            "force_destroy": "false",
+            "lifecycle_rule": "{\"expiration\":{\"days\":1},\"id\":\"lifecycleRule\",\"enabled\":true,\"prefix\":\"PN\"}",
+            "logging": null,
+            "policy": "",
+            "region": null,
+            "replication_configuration": null,
+            "request_payer": null,
+            "tags": "{\"Owner\":\"\",\"CreatedBy\":\"REAN Deploy\",\"Name\":\"rean_managed_cloud_payload_bucket\"}",
+            "versioning": null,
+            "website": null
+          },
+          "positionX": 732,
+          "positionY": 289
+        },
+        {
+          "name": "mnc_payload_bucket_policy",
+          "resourceName": "aws_s3_bucket_policy",
+          "attributes": {
+            "bucket": "${mnc_payload_bucket.bucket}",
+            "policy": "{\n  \"Version\": \"2012-10-17\",\n  \"Statement\": [\n    {\n      \"Action\": [\n        \"s3:GetObject\",\n        \"s3:PutObject\"\n      ],\n      \"Effect\": \"Allow\",\n      \"Resource\": \"${aws_s3_bucket.mnc_payload_bucket.arn}/*\",\n      \"Principal\": {\n        \"AWS\": [\n          \"${mnc_rule_processor_lambda_role.arn}\"\n        ]\n      }\n    }\n  ]\n}"
+          },
+          "positionX": 708,
+          "positionY": 354
+        },
+        {
+          "name": "mnc_rule_processor_cloudwatch_policy",
+          "resourceName": "aws_iam_role_policy",
+          "attributes": {
+            "name": "${var.lambdaFunctionName}_cloudwatch_policy",
+            "policy": "{\n    \"Version\": \"2012-10-17\",\n    \"Statement\": [\n        {\n            \"Effect\": \"Allow\",\n            \"Action\": \"logs:CreateLogGroup\",\n            \"Resource\": \"arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*\"\n        },\n        {\n            \"Effect\": \"Allow\",\n            \"Action\": [\n                \"logs:CreateLogStream\",\n                \"logs:PutLogEvents\"\n            ],\n            \"Resource\": [\n                \"arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${var.lambdaFunctionName}:*\"\n            ]\n        }\n    ]\n}",
+            "role": "${mnc_rule_processor_lambda_role.id}"
+          },
+          "positionX": 248,
+          "positionY": 341
+        },
+        {
+          "name": "mnc_rule_processor_lambda",
+          "resourceName": "aws_lambda_function",
+          "attributes": {
+            "content": null,
+            "dead_letter_config": null,
+            "description": "Managed cloud rule processor lambda functions for processing all MNC rules.",
+            "environment": "{\"variables\":{\"notifierLambdaFunctionName\":\"${var.notifierLambdaFunctionName}\"}}",
+            "filename": null,
+            "function_name": "${var.lambdaFunctionName}",
+            "handler": "main.lambda_handler",
+            "kms_key_arn": null,
+            "memory_size": null,
+            "publish": "false",
+            "role": "${mnc_rule_processor_lambda_role.arn}",
+            "runtime": "python3.6",
+            "s3_bucket": "${var.artifactBucketName}",
+            "s3_key": "${var.artifactAbsolutePath}",
+            "s3_object_version": null,
+            "source_code_hash": null,
+            "tags": "{\"CreatedBy\":\"REAN Deploy\",\"Owner\":\"${var.owner}\",\"Environment\":\"${var.environment}\",\"Product\":\"${var.product}\"}",
+            "timeout": "300",
+            "tracing_config": null,
+            "vpc_config": "{\"subnet_ids\":[\"${var.subnet_ids}\"],\"security_group_ids\":[\"${var.security_group_ids}\"]}"
+          },
+          "positionX": 346,
+          "positionY": 110
+        },
+        {
+          "name": "mnc_rule_processor_lambda_policy",
+          "resourceName": "aws_iam_role_policy",
+          "attributes": {
+            "name": "mnc_rule_processor_lambda_policy",
+            "policy": "{\n    \"Version\":\"2012-10-17\",\n    \"Statement\" :[\n        {\n            \"Effect\":\"Allow\",\n            \"Action\":\"lambda:InvokeFunction\",\n            \"Resource\":\"arn:${data.aws_partition.current.partition}:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:${var.notifierLambdaFunctionName}\"\n        }\n    ]\n}",
+            "role": "${mnc_rule_processor_lambda_role.id}"
+          },
+          "positionX": 226,
+          "positionY": 464
+        },
+        {
+          "name": "mnc_rule_processor_lambda_role",
+          "resourceName": "aws_iam_role",
+          "attributes": {
+            "assume_role_policy": "{\n  \"Version\": \"2012-10-17\",\n  \"Statement\": [\n    {\n      \"Action\": \"sts:AssumeRole\",\n      \"Principal\": {\n        \"Service\": \"lambda.amazonaws.com\"\n      },\n      \"Effect\": \"Allow\"\n    }\n  ]\n}",
+            "name": "${var.lambdaFunctionName}_lambda_role",
+            "name_prefix": null,
+            "path": null
+          },
+          "dependsOn": "",
+          "positionX": 331,
+          "positionY": 191
+        },
+        {
+          "name": "mnc_rule_processor_s3_policy",
+          "resourceName": "aws_iam_role_policy",
+          "attributes": {
+            "name": "${var.lambdaFunctionName}_s3_policy",
+            "policy": "{\n    \"Version\":\"2012-10-17\",\n    \"Statement\": [\n        {\n            \"Effect\": \"Allow\",\n            \"Action\": \"s3:ListAllMyBuckets\",\n            \"Resource\": \"arn:${data.aws_partition.current.partition}:s3:::*\"\n        },\n        {\n            \"Effect\": \"Allow\",\n            \"Action\": [\n                        \"s3:GetObject\",\n                        \"s3:PutObject\"\n                     ],\n            \"Resource\": [\n                \"arn:${data.aws_partition.current.partition}:s3:::${var.artifactBucketName}\",\n                \"arn:${data.aws_partition.current.partition}:s3:::${var.artifactBucketName}/*\",\n                \"${aws_s3_bucket.mnc_payload_bucket.arn}/*\"\n            ]\n        }\n    ]\n}",
+            "role": "${mnc_rule_processor_lambda_role.id}"
+          },
+          "positionX": 234,
+          "positionY": 521
+        },
+        {
+          "name": "mnc_rule_processor_vpc_policy",
+          "resourceName": "aws_iam_role_policy",
+          "attributes": {
+            "name": "mnc_rule_processor_vpc_policy",
+            "policy": "{\n    \"Version\": \"2012-10-17\",\n    \"Statement\": [\n        {\n            \"Effect\": \"Allow\",\n            \"Action\": [\n                \"logs:CreateLogGroup\",\n                \"logs:CreateLogStream\",\n                \"logs:PutLogEvents\",\n                \"ec2:CreateNetworkInterface\",\n                \"ec2:DescribeNetworkInterfaces\",\n                \"ec2:DeleteNetworkInterface\"\n            ],\n            \"Resource\": \"*\"\n        }\n    ]\n}",
+            "role": "${mnc_rule_processor_lambda_role.id}"
+          },
+          "positionX": 330,
+          "positionY": 291
+        },
+        {
+          "name": "Output",
+          "resourceName": "output",
+          "attributes": {
+            "output": "{\"lambdaArn\":{\"value\":\"${mnc_rule_processor_lambda.arn}\"},\"lambdaFunctionName\":{\"value\":\"${mnc_rule_processor_lambda.function_name}\"},\"lambdaRoleArn\":{\"value\":\"${mnc_rule_processor_lambda_role.arn}\"},\"managedCloudAccountNumber\":{\"value\":\"${data.aws_caller_identity.current.account_id}\"},\"lambdaRoleId\":{\"value\":\"${mnc_rule_processor_lambda_role.id}\"}}"
+          },
+          "positionX": 736,
+          "positionY": 101
+        }
+      ]
+    },
+    {
+      "name": "mnc_delete_unused_elb_assume_role",
+      "connectionName": "dummy-connection",
+      "connectionType": "SSH",
+      "description": "Blueprint for creating assume role permissions for delete_unused_elb rule",
+      "envVersion": "01.00.02",
+      "exportedByEmail": "vaibhav.menkudale@reancloud.com",
+      "exportedOn": 1528479766255,
+      "providerName": "REAN-MNC",
+      "providerType": "aws",
+      "region": "us-east-1",
+      "resources": [
+        {
+          "name": "mnc_notifier_lambda_dependency",
+          "resourceName": "Depends_On",
+          "attributes": {
+            "access_key ": null,
+            "acl": null,
+            "assume_role_policy": null,
+            "Depends_On": "mnc_notifier_lambda",
+            "dynamodb_table": null,
+            "encrypt": "false",
+            "endpoint": null,
+            "external_id": null,
+            "kms_key_id": null,
+            "lock_table": null,
+            "profile": null,
+            "reference_type": "Environment Name",
+            "role_arn": null,
+            "secret_key": null,
+            "session_name": null,
+            "shared_credentials_file": null,
+            "token": null,
+            "workspace_key_prefix": null
+          },
+          "positionX": 662,
+          "positionY": 77
+        },
+        {
+          "name": "mnc_notifier_lambda_sts_assume_role",
+          "resourceName": "aws_iam_role_policy",
+          "attributes": {
+            "name": "${mnc_rule_dependency.clientAccountNumber}-mnc_delete_unused_elb_sts_assume_role",
+            "policy": "{\n    \"Version\": \"2012-10-17\",\n    \"Statement\": [\n        {\n            \"Effect\": \"Allow\",\n            \"Action\": \"sts:AssumeRole\",\n            \"Resource\": [\n                \"${mnc_rule_dependency.writeRoleArn}\"\n            ]\n        }\n    ]\n}",
+            "role": "${mnc_notifier_lambda_dependency.lambdaRoleId}"
+          },
+          "positionX": 661,
+          "positionY": 156
+        },
+        {
+          "name": "mnc_rule_dependency",
+          "resourceName": "Depends_On",
+          "attributes": {
+            "access_key ": null,
+            "acl": null,
+            "assume_role_policy": null,
+            "Depends_On": "mnc_delete_unused_elb_config_rule_setup",
+            "dynamodb_table": null,
+            "encrypt": "false",
+            "endpoint": null,
+            "external_id": null,
+            "kms_key_id": null,
+            "lock_table": null,
+            "profile": null,
+            "reference_type": "Environment Name",
+            "role_arn": null,
+            "secret_key": null,
+            "session_name": null,
+            "shared_credentials_file": null,
+            "token": null,
+            "workspace_key_prefix": null
+          },
+          "positionX": 450,
+          "positionY": 238
+        },
+        {
+          "name": "mnc_rule_processor_permission_dependency",
+          "resourceName": "Depends_On",
+          "attributes": {
+            "access_key ": null,
+            "acl": null,
+            "assume_role_policy": null,
+            "Depends_On": "1mnc_rule_processor_lambda_permission",
+            "dynamodb_table": null,
+            "encrypt": "false",
+            "endpoint": null,
+            "external_id": null,
+            "kms_key_id": null,
+            "lock_table": null,
+            "profile": null,
+            "reference_type": "Environment Name",
+            "role_arn": null,
+            "secret_key": null,
+            "session_name": null,
+            "shared_credentials_file": null,
+            "token": null,
+            "workspace_key_prefix": null
+          },
+          "positionX": 79,
+          "positionY": 72
+        },
+        {
+          "name": "mnc_rule_processor_sts_assume_role",
+          "resourceName": "aws_iam_role_policy",
+          "attributes": {
+            "name": "${mnc_rule_dependency.clientAccountNumber}-mnc_delete_unused_elb_sts_assume_role",
+            "policy": "{\n    \"Version\": \"2012-10-17\",\n    \"Statement\": [\n        {\n            \"Effect\": \"Allow\",\n            \"Action\": \"sts:AssumeRole\",\n            \"Resource\": [\n                \"${mnc_rule_dependency.readRoleArn}\",\n                \"${mnc_rule_dependency.writeRoleArn}\"\n            ]\n        }\n    ]\n}",
+            "role": "${mnc_rule_processor_permission_dependency.lambdaRoleId}"
+          },
+          "positionX": 138,
+          "positionY": 158
+        }
+      ]
+    },
+    {
+      "name": "mnc_delete_unused_elb_config_rule_setup",
+      "connectionName": "dummy-connection",
+      "connectionType": "SSH",
+      "description": "Blueprint for creating 'delete_unused_eip' aws config rule.",
+      "envVersion": "01.00.02",
+      "exportedByEmail": "vaibhav.menkudale@reancloud.com",
+      "exportedOn": 1528479766267,
+      "providerName": "REAN-MNC-CLIENT",
+      "providerType": "aws",
+      "region": "us-east-1",
+      "resources": [
+        {
+          "name": "delete_unused_elb_action_policy",
+          "resourceName": "aws_iam_role_policy",
+          "attributes": {
+            "name": "${var.moduleName}_action_policy",
+            "policy": "{\n    \"Version\": \"2012-10-17\",\n    \"Statement\": [\n        {\n            \"Action\": [\n                \"elasticloadbalancing:DeleteLoadBalancer\"\n            ],\n            \"Effect\": \"Allow\",\n            \"Resource\": \"*\"\n        }\n    ]\n}",
+            "role": "${delete_unused_elb_write_role.id}"
+          },
+          "positionX": 541,
+          "positionY": 316
+        },
+        {
+          "name": "delete_unused_elb_config_policy",
+          "resourceName": "aws_iam_role_policy",
+          "attributes": {
+            "name": "${var.moduleName}_config_policy",
+            "policy": "{\n    \"Version\": \"2012-10-17\",\n    \"Statement\": [\n        {\n            \"Effect\": \"Allow\",\n            \"Action\": [\n                \"config:PutEvaluations\"\n            ],\n            \"Resource\": [\n                \"*\"\n            ]\n        }\n    ]\n}",
+            "role": "${delete_unused_elb_write_role.id}"
+          },
+          "positionX": 295,
+          "positionY": 397
+        },
+        {
+          "name": "delete_unused_elb_config_rule",
+          "resourceName": "aws_config_config_rule",
+          "attributes": {
+            "description": "MNC rule to delete unused ELB",
+            "input_parameters": "{   \"toEmail\": \"${var.toEmail}\",   \"ccEmail\": \"${var.ccEmail}\",   \"performAction\": \"${var.performAction}\",   \"notifier\": \"${var.notifier}\", \"newELBSpareTimeHours\": \"${var.newELBSpareTimeHours}\", \"actionName\": \"${var.actionName}\", \"evaluateName\": \"${var.evaluateName}\", \"resourceFetcherName\": \"${var.resourceFetcherName}\" , \"maximum_execution_frequency\":\"${var.maximum_execution_frequency}\"}",
+            "maximum_execution_frequency": "${var.maximum_execution_frequency}",
+            "name": "${var.moduleName}",
+            "scope": "{\"compliance_resource_types\":[\"AWS::ElasticLoadBalancing::LoadBalancer\"]}",
+            "source": "{\"owner\":\"CUSTOM_LAMBDA\",\"source_identifier\":\"${var.lambdaArn}\",\"source_detail\":{\"message_type\":\"ScheduledNotification\"}}"
+          },
+          "positionX": 303,
+          "positionY": 75
+        },
+        {
+          "name": "delete_unused_elb_read_policy",
+          "resourceName": "aws_iam_role_policy",
+          "attributes": {
+            "name": "${var.moduleName}_read_policy",
+            "policy": "{\n    \"Version\": \"2012-10-17\",\n    \"Statement\": [\n        {\n            \"Action\": [\n                \"elasticloadbalancing:DescribeLoadBalancers\",\n                \"elasticloadbalancing:DescribeTags\",\n                \"iam:ListAccountAliases\"\n            ],\n            \"Effect\": \"Allow\",\n            \"Resource\": \"*\"\n        }\n    ]\n}",
+            "role": "${delete_unused_elb_read_role.id}"
+          },
+          "positionX": 61,
+          "positionY": 317
+        },
+        {
+          "name": "delete_unused_elb_read_role",
+          "resourceName": "aws_iam_role",
+          "attributes": {
+            "assume_role_policy": "{\n  \"Version\": \"2012-10-17\",\n  \"Statement\": {\n    \"Effect\": \"Allow\",\n    \"Principal\": {\n      \"AWS\": \"${var.lambdaRoleArn}\"\n    },\n    \"Action\": \"sts:AssumeRole\"\n  }\n}",
+            "name": "${var.moduleName}_read_role",
+            "name_prefix": null,
+            "path": null
+          },
+          "positionX": 78,
+          "positionY": 235
+        },
+        {
+          "name": "delete_unused_elb_write_role",
+          "resourceName": "aws_iam_role",
+          "attributes": {
+            "assume_role_policy": "{\n  \"Version\": \"2012-10-17\",\n  \"Statement\": {\n    \"Effect\": \"Allow\",\n    \"Principal\": {\n      \"AWS\": [\"${var.lambdaRoleArn}\", \"${var.notifierLambdaRoleArn}\"]\n    },\n    \"Action\": \"sts:AssumeRole\"\n  }\n}",
+            "name": "${var.moduleName}_write_role",
+            "name_prefix": null,
+            "path": null
+          },
+          "positionX": 542,
+          "positionY": 238
+        },
+        {
+          "name": "Input Variables",
+          "resourceName": "Input Variables",
+          "attributes": {
+            "input_variables": "{\"toEmail\":\"vaibhav.menkudale@reancloud.com\",\"ccEmail\":\"vaibhav.menkudale@reancloud.com\",\"performAction\":\"True\",\"notifier\":\"email\",\"newELBSpareTimeHours\":\"0\",\"moduleName\":\"delete_unused_elb\",\"lambdaArn\":\"arn:aws:lambda:us-east-1:107339370656:function:vsmnc-test-lambda-notifier\",\"lambdaRoleArn\":\"arn:aws:iam::107339370656:role/vsm-mnc-test-email-vsm_lambda_role\",\"notifierLambdaRoleArn\":\"arn:aws:iam::107339370656:role/vsmnc-test-lambda-notifier_lambda_role\",\"actionName\":\"UnusedELBAction\",\"evaluateName\":\"ELBUnusedLoadBalancersEvaluate\",\"resourceFetcherName\":\"DeleteUnusedELBResourceFetcher\",\"maximum_execution_frequency\":\"TwentyFour_Hours\"}"
+          },
+          "positionX": 174,
+          "positionY": 156
+        },
+        {
+          "name": "Output",
+          "resourceName": "output",
+          "attributes": {
+            "output": "{\"readRoleArn\":{\"value\":\"${delete_unused_elb_read_role.arn}\"},\"writeRoleArn\":{\"value\":\"${delete_unused_elb_write_role.arn}\"},\"clientAccountNumber\":{\"value\":\"${data.aws_caller_identity.current.account_id}\"}}"
+          },
+          "positionX": 540,
+          "positionY": 157
+        }
+      ]
+    },
+    {
+      "name": "mnc_notifier_lambda",
+      "connectionName": "dummy-connection",
+      "connectionType": "SSH",
+      "description": "Blueprint for creating notifier lambda.",
+      "envVersion": "01.00.06",
+      "exportedByEmail": "vaibhav.menkudale@reancloud.com",
+      "exportedOn": 1528479766240,
+      "providerName": "REAN-MNC",
+      "providerType": "aws",
+      "region": "us-east-1",
+      "resources": [
+        {
+          "name": "customer_details_object",
+          "resourceName": "aws_s3_bucket_object",
+          "attributes": {
+            "bucket": "${mnc_customer_details_bucket.id}",
+            "cache_control": null,
+            "content": "\"\"",
+            "content_dispostion": null,
+            "content_encoding": null,
+            "content_language": null,
+            "content_type": null,
+            "etag": null,
+            "key": "customer-details.yaml",
+            "kms_key_id": null,
+            "source": "",
+            "storage_class": null
+          },
+          "positionX": 724,
+          "positionY": 224
+        },
+        {
+          "name": "Input Variables",
+          "resourceName": "Input Variables",
+          "attributes": {
+            "input_variables": "{\"mnc_subnet_id\":[\"\"],\"mnc_security_group_id\":[\"\"],\"notifier_lambda_function_name\":\"\",\"artifact_bucket_name\":\"\",\"artifact_absolute_path\":\"\",\"notifier_sender_email_id\":\"\",\"notifier_aws_region\":\"\",\"smtp_server\":\"\",\"smtp_connection_type\":\"\",\"owner\":\"\",\"environment\":\"\",\"product\":\"Managed-Cloud\"}"
+          },
+          "positionX": 100,
+          "positionY": 184
+        },
+        {
+          "name": "mnc_customer_bucket_policy",
+          "resourceName": "aws_s3_bucket_policy",
+          "attributes": {
+            "bucket": "${mnc_customer_details_bucket.bucket}",
+            "policy": "{\n  \"Version\": \"2012-10-17\",\n  \"Statement\": [\n    {\n      \"Action\": [\n        \"s3:GetObject\",\n        \"s3:PutObject\"\n      ],\n      \"Effect\": \"Allow\",\n      \"Resource\": \"${aws_s3_bucket.mnc_customer_details_bucket.arn}/*\",\n      \"Principal\": {\n        \"AWS\": [\n          \"${mnc_email_notifier_lambda_role.arn}\"\n        ]\n      }\n    }\n  ]\n}"
+          },
+          "positionX": 718,
+          "positionY": 145
+        },
+        {
+          "name": "mnc_customer_details_bucket",
+          "resourceName": "aws_s3_bucket",
+          "attributes": {
+            "acceleration_status": null,
+            "acl": "private",
+            "bucket": "managed-cloud-${data.aws_caller_identity.current.account_id}-customer-details",
+            "cors_rule": null,
+            "force_destroy": "false",
+            "lifecycle_rule": null,
+            "logging": null,
+            "policy": null,
+            "region": null,
+            "replication_configuration": null,
+            "request_payer": null,
+            "tags": "{\"Owner\":\"${var.owner}\",\"CreatedBy\":\"REAN Deploy\",\"Name\":\"mnc_email_notifier_S3_customer_details_bucket\"}",
+            "versioning": null,
+            "website": null
+          },
+          "positionX": 717,
+          "positionY": 62,
+          "preventDestroy": false
+        },
+        {
+          "name": "mnc_email_notifier_cloudwatch_policy",
+          "resourceName": "aws_iam_role_policy",
+          "attributes": {
+            "name": "${var.notifier_lambda_function_name}_cloudwatch_policy",
+            "policy": "{\n    \"Version\": \"2012-10-17\",\n    \"Statement\": [\n        {\n            \"Effect\": \"Allow\",\n            \"Action\": \"logs:CreateLogGroup\",\n            \"Resource\": \"arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*\"\n        },\n        {\n            \"Effect\": \"Allow\",\n            \"Action\": [\n                \"logs:CreateLogStream\",\n                \"logs:PutLogEvents\"\n            ],\n            \"Resource\": [\n                \"arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${var.notifier_lambda_function_name}:*\"\n            ]\n        }\n    ]\n}",
+            "role": "${mnc_email_notifier_lambda_role.id}"
+          },
+          "positionX": 57,
+          "positionY": 309
+        },
+        {
+          "name": "mnc_email_notifier_lambda",
+          "resourceName": "aws_lambda_function",
+          "attributes": {
+            "content": null,
+            "dead_letter_config": null,
+            "description": "Blueprint is used for Deploying and creating Email notifier lambda.",
+            "environment": "[{\"variables\":{\"NOTIFIER_AWS_REGION\":\"${var.notifier_aws_region}\",\"NOTIFIER_SENDER_MAIL_ID\":\"${var.notifier_sender_email_id}\",\"SMTP_SERVER\":\"${var.smtp_server}\",\"SMTP_CONNECTION_TYPE\":\"${var.smtp_connection_type}\",\"CLIENT_ACCOUNT_DETAILS\":\"\"}}]",
+            "filename": null,
+            "function_name": "${var.notifier_lambda_function_name}",
+            "handler": "main.lambda_handler",
+            "kms_key_arn": null,
+            "memory_size": null,
+            "publish": "false",
+            "role": "${mnc_email_notifier_lambda_role.arn}",
+            "runtime": "python3.6",
+            "s3_bucket": "${var.artifact_bucket_name}",
+            "s3_key": "${var.artifact_absolute_path}",
+            "s3_object_version": null,
+            "source_code_hash": null,
+            "tags": "{\"CreatedBy\":\"REAN Deploy\",\"Owner\":\"${var.owner}\",\"Environment\":\"${var.environment}\",\"Product\":\"${var.product}\"}",
+            "timeout": "300",
+            "tracing_config": null,
+            "vpc_config": "{\"subnet_ids\":[\"${var.mnc_subnet_id}\"],\"security_group_ids\":[\"${var.mnc_security_group_id}\"]}"
+          },
+          "positionX": 390,
+          "positionY": 65
+        },
+        {
+          "name": "mnc_email_notifier_lambda_role",
+          "resourceName": "aws_iam_role",
+          "attributes": {
+            "assume_role_policy": "{\n  \"Version\": \"2012-10-17\",\n  \"Statement\": [\n    {\n      \"Action\": \"sts:AssumeRole\",\n      \"Principal\": {\n        \"Service\": \"lambda.amazonaws.com\"\n      },\n      \"Effect\": \"Allow\"\n    }\n  ]\n}",
+            "name": "${var.notifier_lambda_function_name}_lambda_role",
+            "name_prefix": null,
+            "path": null
+          },
+          "positionX": 373,
+          "positionY": 182
+        },
+        {
+          "name": "mnc_email_notifier_S3_policy",
+          "resourceName": "aws_iam_role_policy",
+          "attributes": {
+            "name": "${var.notifier_lambda_function_name}_s3_policy",
+            "policy": "{\n   \"Version\":\"2012-10-17\",\n   \"Statement\": [\n       {\n           \"Effect\": \"Allow\",\n           \"Action\": \"s3:ListAllMyBuckets\",\n           \"Resource\": \"arn:${data.aws_partition.current.partition}:s3:::*\"\n       },\n       {\n           \"Effect\": \"Allow\",\n           \"Action\": [\n                       \"s3:GetObject\",\n                       \"s3:PutObject\"\n                    ],\n           \"Resource\": [\n               \"arn:${data.aws_partition.current.partition}:s3:::${var.artifact_bucket_name}\",\n               \"arn:${data.aws_partition.current.partition}:s3:::${var.artifact_bucket_name}/*\",\n               \"arn:${data.aws_partition.current.partition}:s3:::${data.aws_caller_identity.current.account_id}-rean-managed-cloud-payload/*\",\n               \"${aws_s3_bucket.mnc_customer_details_bucket.arn}/*\"\n           ]\n       }\n   ]\n}",
+            "role": "${mnc_email_notifier_lambda_role.id}"
+          },
+          "positionX": 679,
+          "positionY": 309
+        },
+        {
+          "name": "mnc_email_notifier_SES_policy",
+          "resourceName": "aws_iam_role_policy",
+          "attributes": {
+            "name": "${var.notifier_lambda_function_name}_SES_policy",
+            "policy": "{\n    \"Version\": \"2012-10-17\",\n    \"Statement\": [\n        {\n            \"Effect\": \"Allow\",\n            \"Action\": [\n                \"ses:SendEmail\",\n                \"ses:SendRawEmail\"\n            ],\n            \"Resource\": \"*\"\n        }\n    ]\n}",
+            "role": "${mnc_email_notifier_lambda_role.id}"
+          },
+          "positionX": 682,
+          "positionY": 392
+        },
+        {
+          "name": "mnc_email_notifier_vpc_policy",
+          "resourceName": "aws_iam_role_policy",
+          "attributes": {
+            "name": "${var.notifier_lambda_function_name}_vpc_policy",
+            "policy": "{\n    \"Version\": \"2012-10-17\",\n    \"Statement\": [\n        {\n            \"Effect\": \"Allow\",\n            \"Action\": [\n                \"logs:CreateLogGroup\",\n                \"logs:CreateLogStream\",\n                \"logs:PutLogEvents\",\n                \"ec2:CreateNetworkInterface\",\n                \"ec2:DescribeNetworkInterfaces\",\n                \"ec2:DeleteNetworkInterface\"\n            ],\n            \"Resource\": \"*\"\n        }\n    ]\n}",
+            "role": "${mnc_email_notifier_lambda_role.id}"
+          },
+          "positionX": 112,
+          "positionY": 389
+        },
+        {
+          "name": "Output",
+          "resourceName": "output",
+          "attributes": {
+            "output": "{\"lambdaRoleId\":{\"value\":\"${mnc_email_notifier_lambda_role.id}\"}}"
+          },
+          "positionX": 467,
+          "positionY": 312
+        }
+      ]
+    }
+  ],
+  "rean_deploy_version": "v1.1.0",
+  "packages": []
+}
