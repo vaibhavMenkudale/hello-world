@@ -1,22 +1,22 @@
 {
   "environments": [
     {
-      "name": "mnc_rule_processor_lambda_permission",
-      "connectionName": "",
+      "name": "1mnc_rule_processor_lambda_permission",
+      "connectionName": "dummy-connection",
       "connectionType": "SSH",
       "description": "Blueprint for adding lambda permissions to processor lambda",
       "envVersion": "01.00.02",
-      "exportedByEmail": "",
-      "exportedOn": ,
-      "providerName": "",
+      "exportedByEmail": "vaibhav.menkudale@reancloud.com",
+      "exportedOn": 1528479766212,
+      "providerName": "REAN-MNC",
       "providerType": "aws",
-      "region": "",
+      "region": "us-east-1",
       "resources": [
         {
           "name": "Input Variables",
           "resourceName": "Input Variables",
           "attributes": {
-            "input_variables": "{\"customerAccountNumber\":\"\",\"customerName\":\"\"}"
+            "input_variables": "{\"customerAccountNumber\":\"693265998683\",\"customerName\":\"mnc-client\"}"
           },
           "positionX": 105,
           "positionY": 170
@@ -28,7 +28,7 @@
             "access_key ": null,
             "acl": null,
             "assume_role_policy": null,
-            "Depends_On": "mnc_rule_processor_lambda_setup",
+            "Depends_On": "1mnc_rule_processor_lambda_setup",
             "dynamodb_table": null,
             "encrypt": "false",
             "endpoint": null,
@@ -74,22 +74,22 @@
       ]
     },
     {
-      "name": "mnc_rule_processor_lambda_setup",
-      "connectionName": "",
+      "name": "1mnc_rule_processor_lambda_setup",
+      "connectionName": "dummy-connection",
       "connectionType": "SSH",
       "description": "Blueprint for creating mnc rule processor lambda",
       "envVersion": "01.00.02",
-      "exportedByEmail": "",
-      "exportedOn": ,
-      "providerName": "",
+      "exportedByEmail": "vaibhav.menkudale@reancloud.com",
+      "exportedOn": 1528479766227,
+      "providerName": "REAN-MNC",
       "providerType": "aws",
-      "region": "",
+      "region": "us-east-1",
       "resources": [
         {
           "name": "Input Variables",
           "resourceName": "Input Variables",
           "attributes": {
-            "input_variables": "{\"subnet_ids\":[\"\"],\"security_group_ids\":[\"\"],\"lambdaFunctionName\":\"\",\"notifierLambdaFunctionName\":\"\",\"artifactBucketName\":\"\",\"artifactAbsolutePath\":\"\",\"owner\":\"\",\"environment\":\"\",\"product\":\"REAN Managed Cloud\"}"
+            "input_variables": "{\"subnet_ids\":[\"subnet-caa99297\"],\"security_group_ids\":[\"sg-05310273\"],\"lambdaFunctionName\":\"vsmnc-test-lambda-notifier\",\"notifierLambdaFunctionName\":\"vsmnc-test-email\",\"artifactBucketName\":\"testbuckets3exposed\",\"artifactAbsolutePath\":\"rean_mnc_rule_processor_v1.0.06.zip\",\"owner\":\"vaibhav.menkudale\",\"environment\":\"Testing\",\"product\":\"REAN Managed Cloud\"}"
           },
           "positionX": 98,
           "positionY": 105
@@ -224,15 +224,15 @@
     },
     {
       "name": "mnc_delete_unused_elb_assume_role",
-      "connectionName": "",
+      "connectionName": "dummy-connection",
       "connectionType": "SSH",
       "description": "Blueprint for creating assume role permissions for delete_unused_elb rule",
       "envVersion": "01.00.02",
-      "exportedByEmail": "",
-      "exportedOn": ,
-      "providerName": "",
+      "exportedByEmail": "vaibhav.menkudale@reancloud.com",
+      "exportedOn": 1528479766255,
+      "providerName": "REAN-MNC",
       "providerType": "aws",
-      "region": "",
+      "region": "us-east-1",
       "resources": [
         {
           "name": "mnc_notifier_lambda_dependency",
@@ -304,7 +304,7 @@
             "access_key ": null,
             "acl": null,
             "assume_role_policy": null,
-            "Depends_On": "mnc_rule_processor_lambda_permission",
+            "Depends_On": "1mnc_rule_processor_lambda_permission",
             "dynamodb_table": null,
             "encrypt": "false",
             "endpoint": null,
@@ -338,15 +338,15 @@
     },
     {
       "name": "mnc_delete_unused_elb_config_rule_setup",
-      "connectionName": "",
+      "connectionName": "dummy-connection",
       "connectionType": "SSH",
       "description": "Blueprint for creating 'delete_unused_eip' aws config rule.",
       "envVersion": "01.00.02",
-      "exportedByEmail": "",
-      "exportedOn": ,
+      "exportedByEmail": "vaibhav.menkudale@reancloud.com",
+      "exportedOn": 1528479766267,
       "providerName": "REAN-MNC-CLIENT",
       "providerType": "aws",
-      "region": "",
+      "region": "us-east-1",
       "resources": [
         {
           "name": "delete_unused_elb_action_policy",
@@ -423,7 +423,7 @@
           "name": "Input Variables",
           "resourceName": "Input Variables",
           "attributes": {
-            "input_variables": "{\"toEmail\":\"\",\"ccEmail\":\"\",\"performAction\":\"True\",\"notifier\":\"email\",\"newELBSpareTimeHours\":\"\",\"moduleName\":\"delete_unused_elb\",\"lambdaArn\":\"\",\"lambdaRoleArn\":\"\",\"notifierLambdaRoleArn\":\"\",\"actionName\":\"UnusedELBAction\",\"evaluateName\":\"ELBUnusedLoadBalancersEvaluate\",\"resourceFetcherName\":\"DeleteUnusedELBResourceFetcher\",\"maximum_execution_frequency\":\"TwentyFour_Hours\"}"
+            "input_variables": "{\"toEmail\":\"vaibhav.menkudale@reancloud.com\",\"ccEmail\":\"vaibhav.menkudale@reancloud.com\",\"performAction\":\"True\",\"notifier\":\"email\",\"newELBSpareTimeHours\":\"0\",\"moduleName\":\"delete_unused_elb\",\"lambdaArn\":\"arn:aws:lambda:us-east-1:107339370656:function:vsmnc-test-lambda-notifier\",\"lambdaRoleArn\":\"arn:aws:iam::107339370656:role/vsm-mnc-test-email-vsm_lambda_role\",\"notifierLambdaRoleArn\":\"arn:aws:iam::107339370656:role/vsmnc-test-lambda-notifier_lambda_role\",\"actionName\":\"UnusedELBAction\",\"evaluateName\":\"ELBUnusedLoadBalancersEvaluate\",\"resourceFetcherName\":\"DeleteUnusedELBResourceFetcher\",\"maximum_execution_frequency\":\"TwentyFour_Hours\"}"
           },
           "positionX": 174,
           "positionY": 156
@@ -441,15 +441,15 @@
     },
     {
       "name": "mnc_notifier_lambda",
-      "connectionName": "",
+      "connectionName": "dummy-connection",
       "connectionType": "SSH",
       "description": "Blueprint for creating notifier lambda.",
-      "envVersion": "01.00.02",
-      "exportedByEmail": "",
-      "exportedOn": ,
-      "providerName": "",
+      "envVersion": "01.00.06",
+      "exportedByEmail": "vaibhav.menkudale@reancloud.com",
+      "exportedOn": 1528479766240,
+      "providerName": "REAN-MNC",
       "providerType": "aws",
-      "region": "",
+      "region": "us-east-1",
       "resources": [
         {
           "name": "customer_details_object",
