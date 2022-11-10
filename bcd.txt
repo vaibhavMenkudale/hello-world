@@ -2,18 +2,11 @@ Hey this
 
 
 
-<<<<<<< HEAD
-GOOGLRETR
-=======
->>>>>>> master
 
 
 ghuxgajgk
 ljci
-<<<<<<< HEAD
 master
-=======
 
 yahoo
 youtube
->>>>>>> master
